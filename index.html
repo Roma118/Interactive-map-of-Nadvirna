@@ -27,6 +27,26 @@
   <script>
     // 1. Створюємо карту й центруємо її на Надвірній
     var map = L.map('map').setView([48.6333, 24.5833], 14);
+    // Звичайна карта
+var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; учасники OpenStreetMap'
+});
+
+// Супутник (знімки Esri)
+var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 19,
+  attribution: 'Знімки &copy; Esri'
+});
+
+// Показуємо звичайну карту при відкритті
+osm.addTo(map);
+
+// Кнопка-перемикач у правому верхньому куті
+L.control.layers({
+  'Карта': osm,
+  'Супутник': satellite
+}).addTo(map);
 
     // 2. Підкладка з картою OpenStreetMap
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
