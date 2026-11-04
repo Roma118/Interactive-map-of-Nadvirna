@@ -12,6 +12,13 @@
   <style>
     body { margin: 0; font-family: sans-serif; }
     #map { height: 100vh; width: 100%; }
+    .district-label {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2a4d8f;
+  text-shadow: 1px 1px 2px white, -1px -1px 2px white;
+  text-align: center;
+}
   </style>
 </head>
 <body>
@@ -41,6 +48,14 @@
     ], { color: 'green', fillOpacity: 0.2 })
       .addTo(map)
       .bindPopup('<b>Приклад району</b>');
+    L.marker([48.64806241374767, 24.588595111519023], {
+  icon: L.divIcon({
+    className: 'district-label',
+    html: 'Річки',
+    iconSize: [100, 30]
+  }),
+  interactive: false
+}).addTo(map);
   </script>
 </body>
 </html>
