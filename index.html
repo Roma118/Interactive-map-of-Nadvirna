@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Карта Надвірної</title>
+
+  <!-- Підключаємо Leaflet: стилі й сам скрипт -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    body { margin: 0; font-family: sans-serif; }
+    #map { height: 100vh; width: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    // 1. Створюємо карту й центруємо її на Надвірній
+    var map = L.map('map').setView([48.6333, 24.5833], 14);
+
+    // 2. Підкладка з картою OpenStreetMap
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; учасники OpenStreetMap'
+    }).addTo(map);
+
+    // 3. Приклад мітки зі спливаючою карткою
+    L.marker([48.6333, 24.5833])
+      .addTo(map)
+      .bindPopup('<b>Центр Надвірної</b><br>Тут буде опис місця.');
+
+    // 4. Приклад району, намальованого кольоровим полігоном
+    L.polygon([
+      [48.640, 24.575],
+      [48.640, 24.590],
+      [48.630, 24.590],
+      [48.630, 24.575]
+    ], { color: 'green', fillOpacity: 0.2 })
+      .addTo(map)
+      .bindPopup('<b>Приклад району</b>');
+  </script>
+</body>
+</html>
