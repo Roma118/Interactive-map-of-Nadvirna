@@ -25,6 +25,15 @@
     text-align: center;
     cursor: pointer;
   }
+  .photo-icon img {
+width: 60px;
+height: 60px;
+object-fit: cover;
+border: 3px solid white;
+border-radius: 8px;
+box-shadow: 0 0 8px rgba(0,0,0,0.6);
+cursor: pointer;
+}
   .leaflet-popup-content {
   font-size: 18px;
 }
@@ -103,6 +112,14 @@
     })
   }).addTo(map)
     .bindPopup('<b>вул. Гетьмана Івана Мазепи</b><br>Раніше: 1-го Травня, 3-го Травня (3 Maja), Станіславівська');
+  L.marker([48.634021863367984, 24.570932457481078], {
+  icon: L.divIcon({
+    className: 'photo-icon',
+    html: '',
+    iconSize: [60, 60]
+  })
+}).addTo(map)
+  .bindPopup('');
 </script>
 
 </body>
