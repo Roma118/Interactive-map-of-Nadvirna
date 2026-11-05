@@ -93,16 +93,13 @@ L.control.layers({
   interactive: false
 }).addTo(map);
     L.marker([48.64350096532669, 24.575589759261074], {
-icon: L.divIcon({
-className: 'street-label',
-iconSize: [30, 30]
-})
+  icon: L.divIcon({
+    className: 'street-label',
+    html: 'вул. Мазепи',
+    iconSize: [100, 30]
+  })
 }).addTo(map)
-html: 'вул. Мазепи',
-  iconSize: [30, 30]
-})
-}).addTo(map)
-.bindPopup('<b>вул. Гетьмана Івана Мазепи</b><br>Раніше: 1-го Травня, 3-го Травня (3 Maja), Станіславівська');
+  .bindPopup('вул. Гетьмана Івана Мазепи Раніше: 1-го Травня, 3-го Травня (3 Maja), Станіславівська');
   </script>
 </body>
 </html>
