@@ -27,7 +27,11 @@
 
   <script>
     // 1. Створюємо карту й центруємо її на Надвірній
-    var map = L.map('map').setView([48.6333, 24.5833], 14);
+    var map = L.map('map', {
+  maxBounds: [[48.60419836040843, 24.530568289659303], [48.66336565863335, 24.62824772042684]],
+  maxBoundsViscosity: 1.0,
+  minZoom: 12
+}).setView([48.6333, 24.5833], 14);
     // Звичайна карта
 var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
