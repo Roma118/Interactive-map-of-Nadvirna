@@ -80,6 +80,14 @@ L.control.layers({
   }),
   interactive: false
 }).addTo(map);
+    L.marker([48.64350096532669, 24.575589759261074], {
+icon: L.divIcon({
+className: 'history-icon',
+html: '🕰️',
+  iconSize: [30, 30]
+})
+}).addTo(map)
+.bindPopup('<b>вул. Гетьмана Івана Мазепи</b><br>Раніше: 1-го Травня, 3-го Травня (3 Maja), Станіславівська');
   </script>
 </body>
 </html>
