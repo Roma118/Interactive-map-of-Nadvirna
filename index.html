@@ -25,18 +25,18 @@
     text-align: center;
     cursor: pointer;
   }
+
   .photo-icon img {
-width: 60px;
-height: 60px;
-object-fit: cover;
-border: 3px solid white;
-border-radius: 8px;
-box-shadow: 0 0 8px rgba(0,0,0,0.6);
-cursor: pointer;
-}
-  .leaflet-popup-content {
-  font-size: 18px;
-}
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border: 3px solid white;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.6);
+    cursor: pointer;
+  }
+
+  .leaflet-popup-content { font-size: 18px; }
 
   .district-label::before {
     content: "";
@@ -112,14 +112,22 @@ cursor: pointer;
     })
   }).addTo(map)
     .bindPopup('<b>вул. Гетьмана Івана Мазепи</b><br>Раніше: 1-го Травня, 3-го Травня (3 Maja), Станіславівська');
+
+  // Фото «колись і тепер»
+  var photoNew = '850370192_122132470694881327_637810224935811712_n.jpg';
+  var photoOld = '848570233_122132469422881327_7963786196056815321_n.jpg';
+
   L.marker([48.634021863367984, 24.570932457481078], {
-  icon: L.divIcon({
-    className: 'photo-icon',
-    html: '',
-    iconSize: [60, 60]
-  })
-}).addTo(map)
-  .bindPopup('');
+    icon: L.divIcon({
+      className: 'photo-icon',
+      html: '<img src="' + photoNew + '">',
+      iconSize: [60, 60]
+    })
+  }).addTo(map)
+    .bindPopup(
+      '<img src="' + photoNew + '" style="width:300px"><br>' +
+      '<img src="' + photoOld + '" style="width:300px">'
+    );
 </script>
 
 </body>
