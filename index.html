@@ -12,6 +12,18 @@
   <style>
     body { margin: 0; font-family: sans-serif; }
     #map { height: 100vh; width: 100%; }
+    .street-label {
+  background: white;
+  color: #8B0000;
+  border: 2px solid #8B0000;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 16px;
+  font-weight: bold;
+  white-space: nowrap;
+  text-align: center;
+  cursor: pointer;
+}
 .district-label::before {
 content: "";
   position: absolute;
@@ -82,8 +94,11 @@ L.control.layers({
 }).addTo(map);
     L.marker([48.64350096532669, 24.575589759261074], {
 icon: L.divIcon({
-className: 'history-icon',
-html: '🕰️',
+className: 'street-label',
+iconSize: [30, 30]
+})
+}).addTo(map)
+html: 'вул. Мазепи',
   iconSize: [30, 30]
 })
 }).addTo(map)
