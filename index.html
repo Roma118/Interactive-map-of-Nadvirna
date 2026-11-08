@@ -237,6 +237,17 @@
   function loadFromFileOrOverpass() {
     statusBox.style.display = 'block';
     statusBox.textContent = 'Завантажую вулиці…';
+    // 1) пам'ять браузера (якщо вже відкривали карту раніше)
+    try {
+      var cached = localStorage.getItem('nadvirna-base-v1');
+      if (cached) {
+        drawBase(JSON.parse(cached));
+        customLoaded = true;
+        statusBox.style.display = 'none';
+        return;
+      }
+    } catch (e) {}
+    // 2) локальний файл поруч з index.html, якщо він є; 3) інакше Overpass
     fetch('nadvirna-roads.json')
       .then(function (r) { if (!r.ok) throw new Error('no file'); return r.json(); })
       .then(function (data) {
@@ -264,6 +275,7 @@
         drawBase(data);
         customLoaded = true;
         statusBox.style.display = 'none';
+        try { localStorage.setItem('nadvirna-base-v1', JSON.stringify(data)); } catch (e) {}
       })
       .catch(function () { loadCustomBase(serverIndex + 1); });
   }
