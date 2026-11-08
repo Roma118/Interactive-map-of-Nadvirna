@@ -152,6 +152,7 @@
   // ===== Власна підкладка: вулиці, річки, зелень з OpenStreetMap, без будівель =====
   map.createPane('basePane');
   map.getPane('basePane').style.zIndex = 250;
+  var baseCanvas = L.canvas({ pane: 'basePane', padding: 0.5 });
 
   var customBase = L.layerGroup();
   var customLoaded = false;
@@ -195,8 +196,8 @@
 
       if (t.highway) {
         var st = roadStyle(t.highway);
-        L.polyline(pts, { pane: 'basePane', color: st.casing, weight: st.casingWeight, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(casings);
-        L.polyline(pts, { pane: 'basePane', color: st.color, weight: st.weight, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(roads);
+        L.polyline(pts, { renderer: baseCanvas, pane: 'basePane', color: st.casing, weight: st.casingWeight, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(casings);
+        L.polyline(pts, { renderer: baseCanvas, pane: 'basePane', color: st.color, weight: st.weight, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(roads);
 
         var name = t['name:uk'] || t.name;
         if (name && pts.length > 1) {
@@ -212,12 +213,12 @@
           }
         }
       } else if (t.waterway) {
-        L.polyline(pts, { pane: 'basePane', color: '#a9d3e8', weight: t.waterway === 'river' ? 6 : 3, opacity: 1, lineCap: 'round', interactive: false }).addTo(water);
+        L.polyline(pts, { renderer: baseCanvas, pane: 'basePane', color: '#a9d3e8', weight: t.waterway === 'river' ? 6 : 3, opacity: 1, lineCap: 'round', interactive: false }).addTo(water);
       } else if (t.natural === 'water') {
-        L.polygon(pts, { pane: 'basePane', color: '#a9d3e8', weight: 1, fillColor: '#bfe0ef', fillOpacity: 1, interactive: false }).addTo(water);
+        L.polygon(pts, { renderer: baseCanvas, pane: 'basePane', color: '#a9d3e8', weight: 1, fillColor: '#bfe0ef', fillOpacity: 1, interactive: false }).addTo(water);
       } else {
         var green = (t.natural === 'wood' || t.landuse === 'forest');
-        L.polygon(pts, { pane: 'basePane', color: green ? '#cfe3c4' : '#dcebd3', weight: 0, fillColor: green ? '#d6e8cb' : '#e4f0dc', fillOpacity: 1, interactive: false }).addTo(areas);
+        L.polygon(pts, { renderer: baseCanvas, pane: 'basePane', color: green ? '#cfe3c4' : '#dcebd3', weight: 0, fillColor: green ? '#d6e8cb' : '#e4f0dc', fillOpacity: 1, interactive: false }).addTo(areas);
       }
     });
 
@@ -249,19 +250,19 @@
       .catch(function () { loadCustomBase(serverIndex + 1); });
   }
 
-  // Світле тло під власною підкладкою
-  var plainBg = L.rectangle([[48.5, 24.4], [48.8, 24.8]], {
-    pane: 'basePane', stroke: false, fillColor: '#f1f0ec', fillOpacity: 1, interactive: false
-  });
-  customBase.addLayer(plainBg);
-
+  // Світле тло: кольором самого контейнера карти, щоб воно не перекривало лінії
   var ownMap = customBase;
 
   osm.addTo(map);
   L.control.layers({ 'Карта': osm, 'Своя карта (без будівель)': ownMap, 'Супутник': satellite }, null, { collapsed: false }).addTo(map);
 
   map.on('baselayerchange', function (e) {
-    if (e.layer === ownMap && !customLoaded) loadCustomBase(0);
+    if (e.layer === ownMap) {
+      document.getElementById('map').style.background = '#f1f0ec';
+      if (!customLoaded) loadCustomBase(0);
+    } else {
+      document.getElementById('map').style.background = '';
+    }
   });
 
   map.on('click', function (e) {
