@@ -60,6 +60,29 @@
 
   .leaflet-popup-content { font-size: 18px; }
 
+  .road-label {
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: #555;
+    font-size: 12px;
+    text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+    padding: 0;
+  }
+  .road-label::before { display: none; }
+  #base-status {
+    position: absolute;
+    right: 10px;
+    bottom: 30px;
+    z-index: 1000;
+    background: white;
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 14px;
+    display: none;
+  }
+
   .district-label::before {
     content: "";
     position: absolute;
@@ -126,8 +149,120 @@
     attribution: 'Знімки &copy; Esri'
   });
 
+  // ===== Власна підкладка: вулиці, річки, зелень з OpenStreetMap, без будівель =====
+  map.createPane('basePane');
+  map.getPane('basePane').style.zIndex = 250;
+
+  var customBase = L.layerGroup();
+  var customLoaded = false;
+  var statusBox = document.createElement('div');
+  statusBox.id = 'base-status';
+  document.body.appendChild(statusBox);
+
+  var overpassServers = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter'
+  ];
+
+  var overpassQuery =
+    '[out:json][timeout:60];(' +
+    'way["highway"]["highway"!~"^(footway|steps|corridor|bus_guideway|proposed|construction)$"](48.6042,24.5306,48.6634,24.6283);' +
+    'way["waterway"~"^(river|stream|canal)$"](48.6042,24.5306,48.6634,24.6283);' +
+    'way["natural"~"^(water|wood)$"](48.6042,24.5306,48.6634,24.6283);' +
+    'way["landuse"~"^(forest|meadow|grass|cemetery|recreation_ground)$"](48.6042,24.5306,48.6634,24.6283);' +
+    'way["leisure"~"^(park|garden|pitch)$"](48.6042,24.5306,48.6634,24.6283);' +
+    ');out geom;';
+
+  function roadStyle(h) {
+    if (/^(trunk|primary)/.test(h)) return { color: '#ffffff', weight: 7, casing: '#c9c9c9', casingWeight: 9 };
+    if (/^(secondary|tertiary)/.test(h)) return { color: '#ffffff', weight: 5, casing: '#cfcfcf', casingWeight: 7 };
+    if (/^(residential|unclassified|living_street)/.test(h)) return { color: '#ffffff', weight: 3.5, casing: '#d6d6d6', casingWeight: 5 };
+    return { color: '#ffffff', weight: 2, casing: '#dddddd', casingWeight: 3.5 };
+  }
+
+  function drawBase(data) {
+    var areas = L.layerGroup();
+    var water = L.layerGroup();
+    var casings = L.layerGroup();
+    var roads = L.layerGroup();
+    var labels = L.layerGroup();
+    var usedNames = {};
+
+    data.elements.forEach(function (el) {
+      if (el.type !== 'way' || !el.geometry) return;
+      var pts = el.geometry.map(function (g) { return [g.lat, g.lon]; });
+      var t = el.tags || {};
+
+      if (t.highway) {
+        var st = roadStyle(t.highway);
+        L.polyline(pts, { pane: 'basePane', color: st.casing, weight: st.casingWeight, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(casings);
+        L.polyline(pts, { pane: 'basePane', color: st.color, weight: st.weight, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(roads);
+
+        var name = t['name:uk'] || t.name;
+        if (name && pts.length > 1) {
+          var key = name + '|' + Math.round(pts[0][0] * 200) + '|' + Math.round(pts[0][1] * 200);
+          if (!usedNames[key]) {
+            usedNames[key] = true;
+            var mid = pts[Math.floor(pts.length / 2)];
+            L.marker(mid, {
+              pane: 'basePane',
+              interactive: false,
+              icon: L.divIcon({ className: 'road-label', html: name, iconSize: null })
+            }).addTo(labels);
+          }
+        }
+      } else if (t.waterway) {
+        L.polyline(pts, { pane: 'basePane', color: '#a9d3e8', weight: t.waterway === 'river' ? 6 : 3, opacity: 1, lineCap: 'round', interactive: false }).addTo(water);
+      } else if (t.natural === 'water') {
+        L.polygon(pts, { pane: 'basePane', color: '#a9d3e8', weight: 1, fillColor: '#bfe0ef', fillOpacity: 1, interactive: false }).addTo(water);
+      } else {
+        var green = (t.natural === 'wood' || t.landuse === 'forest');
+        L.polygon(pts, { pane: 'basePane', color: green ? '#cfe3c4' : '#dcebd3', weight: 0, fillColor: green ? '#d6e8cb' : '#e4f0dc', fillOpacity: 1, interactive: false }).addTo(areas);
+      }
+    });
+
+    areas.addTo(customBase);
+    water.addTo(customBase);
+    casings.addTo(customBase);
+    roads.addTo(customBase);
+    labels.addTo(customBase);
+  }
+
+  function loadCustomBase(serverIndex) {
+    serverIndex = serverIndex || 0;
+    if (serverIndex >= overpassServers.length) {
+      statusBox.textContent = 'Не вдалося завантажити вулиці. Спробуйте оновити сторінку.';
+      return;
+    }
+    statusBox.style.display = 'block';
+    statusBox.textContent = 'Завантажую вулиці…';
+    fetch(overpassServers[serverIndex], {
+      method: 'POST',
+      body: 'data=' + encodeURIComponent(overpassQuery)
+    })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (data) {
+        drawBase(data);
+        customLoaded = true;
+        statusBox.style.display = 'none';
+      })
+      .catch(function () { loadCustomBase(serverIndex + 1); });
+  }
+
+  // Світле тло під власною підкладкою
+  var plainBg = L.rectangle([[48.5, 24.4], [48.8, 24.8]], {
+    pane: 'basePane', stroke: false, fillColor: '#f1f0ec', fillOpacity: 1, interactive: false
+  });
+  customBase.addLayer(plainBg);
+
+  var ownMap = customBase;
+
   osm.addTo(map);
-  L.control.layers({ 'Карта': osm, 'Супутник': satellite }).addTo(map);
+  L.control.layers({ 'Карта': osm, 'Своя карта (без будівель)': ownMap, 'Супутник': satellite }, null, { collapsed: false }).addTo(map);
+
+  map.on('baselayerchange', function (e) {
+    if (e.layer === ownMap && !customLoaded) loadCustomBase(0);
+  });
 
   map.on('click', function (e) {
     document.getElementById('coords-box').textContent =
