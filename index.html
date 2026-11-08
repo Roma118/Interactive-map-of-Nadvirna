@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -12,14 +13,40 @@
   body { margin: 0; font-family: sans-serif; }
   #map { height: 100vh; width: 100%; }
 
-  .street-sign {
-    width: 18px;
-    height: 11px;
-    background: #1E50A0;
-    border: 2px solid white;
-    border-radius: 2px;
-    box-shadow: 0 0 4px rgba(0,0,0,0.6);
-    cursor: pointer;
+  /* Скляна шпилька: прозорий видовжений трикутник вістрям вниз */
+  .pin-wrap {
+    position: relative;
+    width: 22px;
+    height: 34px;
+  }
+  .pin-shadow {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 16px;
+    height: 6px;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 70%);
+    filter: blur(1px);
+  }
+  .pin-glass {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 22px;
+    height: 30px;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    background: linear-gradient(160deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.12) 45%, rgba(255,255,255,0.25) 100%);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+  }
+  .pin-outline {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 22px;
+    height: 30px;
+    pointer-events: none;
   }
 
   .photo-icon img {
@@ -84,9 +111,21 @@
     minZoom: 12
   }).setView([48.6333, 24.5833], 14);
 
+  // Окремі шари: райони нижче, шпильки вулиць вище
+  map.createPane('districtsPane');
+  map.getPane('districtsPane').style.zIndex = 450;
+  map.createPane('streetsPane');
+  map.getPane('streetsPane').style.zIndex = 650;
+
   var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; учасники OpenStreetMap'
+  });
+
+  var positron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    subdomains: 'abcd',
+    attribution: '&copy; учасники OpenStreetMap &copy; CARTO'
   });
 
   var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -95,7 +134,7 @@
   });
 
   osm.addTo(map);
-  L.control.layers({ 'Карта': osm, 'Супутник': satellite }).addTo(map);
+  L.control.layers({ 'Карта': osm, 'Світла (Positron)': positron, 'Супутник': satellite }).addTo(map);
 
   map.on('click', function (e) {
     document.getElementById('coords-box').textContent =
@@ -108,7 +147,8 @@
       html: '<span>Річки</span>',
       iconSize: [100, 30]
     }),
-    interactive: false
+    interactive: false,
+    pane: 'districtsPane'
   }).addTo(map);
 
   var photoNew = '850370192_122132470694881327_637810224935811712_n.jpg';
@@ -201,19 +241,30 @@
     ['Свідруків М. і М.', [48.625059, 24.570027], ["Воз'єднання"]]
   ];
 
+  var pinHtml =
+    '<div class="pin-wrap">' +
+      '<div class="pin-shadow"></div>' +
+      '<div class="pin-glass"></div>' +
+      '<svg class="pin-outline" viewBox="0 0 22 30">' +
+        '<polygon points="1,1 21,1 11,29" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.6" stroke-linejoin="round"/>' +
+        '<polygon points="1,1 21,1 11,29" fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.6" stroke-linejoin="round"/>' +
+      '</svg>' +
+    '</div>';
+
   streets.forEach(function (s) {
     var olds = s[2].length ? '<br>Раніше: ' + s[2].join('; ') : '';
     L.marker(s[1], {
+      pane: 'streetsPane',
       icon: L.divIcon({
         className: '',
-        html: '<div class="street-sign"></div>',
-        iconSize: [22, 15],
-        iconAnchor: [11, 7]
+        html: pinHtml,
+        iconSize: [22, 34],
+        iconAnchor: [11, 32]
       })
     })
       .addTo(map)
-      .bindTooltip(s[0], { direction: 'top' })
-      .bindPopup('<b>' + s[0] + '</b>' + olds);
+      .bindTooltip(s[0], { direction: 'top', offset: [0, -30] })
+      .bindPopup('<b>' + s[0] + '</b>' + olds, { offset: [0, -28] });
   });
 </script>
 
