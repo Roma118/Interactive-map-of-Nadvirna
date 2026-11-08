@@ -12,16 +12,13 @@
   body { margin: 0; font-family: sans-serif; }
   #map { height: 100vh; width: 100%; }
 
-  .street-label {
-    background: white;
-    color: #8B0000;
-    border: 2px solid #8B0000;
-    border-radius: 6px;
-    padding: 0 4px;
-    font-size: 12px;
-    font-weight: bold;
-    white-space: nowrap;
-    text-align: center;
+  .street-sign {
+    width: 18px;
+    height: 11px;
+    background: #1E50A0;
+    border: 2px solid white;
+    border-radius: 2px;
+    box-shadow: 0 0 4px rgba(0,0,0,0.6);
     cursor: pointer;
   }
 
@@ -208,11 +205,15 @@
     var olds = s[2].length ? '<br>Раніше: ' + s[2].join('; ') : '';
     L.marker(s[1], {
       icon: L.divIcon({
-        className: 'street-label',
-        html: s[0],
-        iconSize: [90, 20]
+        className: '',
+        html: '<div class="street-sign"></div>',
+        iconSize: [22, 15],
+        iconAnchor: [11, 7]
       })
-    }).addTo(map).bindPopup('<b>' + s[0] + '</b>' + olds);
+    })
+      .addTo(map)
+      .bindTooltip(s[0], { direction: 'top' })
+      .bindPopup('<b>' + s[0] + '</b>' + olds);
   });
 </script>
 
