@@ -233,11 +233,19 @@
           var key = name + '|' + Math.round(pts[0][0] * 200) + '|' + Math.round(pts[0][1] * 200);
           if (!usedNames[key]) {
             usedNames[key] = true;
-            var mid = pts[Math.floor(pts.length / 2)];
+            var mi = Math.floor(pts.length / 2);
+            var mid = pts[mi];
+            var pa = pts[Math.max(0, mi - 1)];
+            var pb = pts[Math.min(pts.length - 1, mi + 1)];
+            var p1 = map.project(L.latLng(pa[0], pa[1]), 17);
+            var p2 = map.project(L.latLng(pb[0], pb[1]), 17);
+            var angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+            if (angle > 90) angle -= 180;
+            if (angle < -90) angle += 180;
             L.marker(mid, {
               pane: 'roadLabelsPane',
               interactive: false,
-              icon: L.divIcon({ className: 'road-label', html: name, iconSize: null })
+              icon: L.divIcon({ className: 'road-label', html: '<span style="display:inline-block;transform:translate(-50%,-50%) rotate(' + angle.toFixed(1) + 'deg);white-space:nowrap;">' + name + '</span>', iconSize: [0, 0] })
             }).addTo(labels);
           }
         }
