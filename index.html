@@ -178,13 +178,39 @@
     ');out geom;';
 
   function roadStyle(h) {
-    if (/^(trunk|primary)/.test(h)) return { color: '#ffffff', weight: 7, casing: '#c9c9c9', casingWeight: 9 };
-    if (/^(secondary|tertiary)/.test(h)) return { color: '#ffffff', weight: 5, casing: '#cfcfcf', casingWeight: 7 };
-    if (/^(residential|unclassified|living_street)/.test(h)) return { color: '#ffffff', weight: 3.5, casing: '#d6d6d6', casingWeight: 5 };
-    return { color: '#ffffff', weight: 2, casing: '#dddddd', casingWeight: 3.5 };
+    if (/^(trunk|primary)/.test(h)) return { color: '#ffffff', weight: 9, casing: '#8f8f8f', casingWeight: 11.5 };
+    if (/^(secondary|tertiary)/.test(h)) return { color: '#ffffff', weight: 7, casing: '#9a9a9a', casingWeight: 9.5 };
+    if (/^(residential|unclassified|living_street)/.test(h)) return { color: '#ffffff', weight: 5, casing: '#a6a6a6', casingWeight: 7 };
+    return { color: '#ffffff', weight: 3, casing: '#b5b5b5', casingWeight: 4.8 };
+  }
+
+  // Якщо дані у форматі GeoJSON (FeatureCollection), перетворюємо їх на формат Overpass
+  function normalizeData(data) {
+    if (data && data.elements) return data;
+    var els = [];
+    var feats = (data && data.features) || [];
+    feats.forEach(function (f) {
+      if (!f.geometry) return;
+      var props = f.properties || {};
+      var tags = props.tags ? props.tags : props;
+      var lines = [];
+      if (f.geometry.type === 'LineString') lines.push(f.geometry.coordinates);
+      else if (f.geometry.type === 'MultiLineString') lines = f.geometry.coordinates;
+      else if (f.geometry.type === 'Polygon') lines.push(f.geometry.coordinates[0]);
+      else if (f.geometry.type === 'MultiPolygon') f.geometry.coordinates.forEach(function (p) { lines.push(p[0]); });
+      lines.forEach(function (coords) {
+        els.push({
+          type: 'way',
+          tags: tags,
+          geometry: coords.map(function (c) { return { lon: c[0], lat: c[1] }; })
+        });
+      });
+    });
+    return { elements: els };
   }
 
   function drawBase(data) {
+    data = normalizeData(data);
     var areas = L.layerGroup();
     var water = L.layerGroup();
     var casings = L.layerGroup();
