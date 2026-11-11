@@ -334,15 +334,27 @@
       e.latlng.lat.toFixed(6) + ', ' + e.latlng.lng.toFixed(6);
   });
 
-  L.marker([48.647612, 24.589323], {
-    icon: L.divIcon({
-      className: 'district-label rivers',
-      html: '<span>Річки</span>',
-      iconSize: [100, 30]
-    }),
-    interactive: false,
-    pane: 'districtsPane'
-  }).addTo(map);
+  // ============ РАЙОНИ ============
+  // Щоб додати район, скопіюй один рядок нижче, зміни назву, координати
+  // і кут нахилу напису (0 = прямо, від'ємне число = нахил вгору). Не забудь кому в кінці рядка.
+  // Формат рядка: ['Назва', [широта, довгота], кут],
+  var districts = [
+    ['Річки', [48.647612, 24.589323], -20],
+    // ['Новий район', [48.630000, 24.570000], 0],
+  ];
+  // ================================
+
+  districts.forEach(function (d) {
+    L.marker(d[1], {
+      icon: L.divIcon({
+        className: 'district-label',
+        html: '<span style="display:inline-block;transform:rotate(' + (d[2] || 0) + 'deg);white-space:nowrap;">' + d[0] + '</span>',
+        iconSize: [100, 30]
+      }),
+      interactive: false,
+      pane: 'districtsPane'
+    }).addTo(map);
+  });
 
   var photoNew = '850370192_122132470694881327_637810224935811712_n.jpg';
   var photoOld = '848570233_122132469422881327_7963786196056815321_n.jpg';
