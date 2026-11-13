@@ -177,6 +177,9 @@
     'way["leisure"~"^(park|garden|pitch)$"](48.6042,24.5306,48.6634,24.6283);' +
     ');out geom;';
 
+  // Підписи вулиць на власній карті: true = показувати, false = вимкнено (легше для телефону)
+  var SHOW_ROAD_LABELS = false;
+
   function roadStyle(h) {
     if (/^(trunk|primary)/.test(h)) return { color: '#ffffff', weight: 9, casing: '#8f8f8f', casingWeight: 11.5 };
     if (/^(secondary|tertiary)/.test(h)) return { color: '#ffffff', weight: 7, casing: '#9a9a9a', casingWeight: 9.5 };
@@ -228,7 +231,7 @@
         L.polyline(pts, { renderer: baseCanvas, pane: 'basePane', color: st.casing, weight: st.casingWeight, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(casings);
         L.polyline(pts, { renderer: baseCanvas, pane: 'basePane', color: st.color, weight: st.weight, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(roads);
 
-        var name = t['name:uk'] || t.name;
+        var name = SHOW_ROAD_LABELS ? (t['name:uk'] || t.name) : null;
         if (name && pts.length > 1) {
           var key = name + '|' + Math.round(pts[0][0] * 200) + '|' + Math.round(pts[0][1] * 200);
           if (!usedNames[key]) {
@@ -364,10 +367,6 @@
   // Якщо старого фото немає, залиш порожні лапки: ''. Підпису немає: ''.
   var photos = [
     [[48.634021863367984, 24.570932457481078], 'Fotos/sadok_nova.jpg', 'Fotos/sadok_stara.jpg', ''],
-    [[48.632705, 24.564469], 'Fotos/kostel_new.jpg', 'Fotos/kostel_old.jpg', ''],
-    [[48.634935, 24.570011], 'Fotos/mickevycza_new.jpg', 'Fotos/mickevycza_old.jpg', ''],
-    [[48.633494, 24.568058], 'Fotos/ploszcza_new.jpg', 'Fotos/ploszcza_old.jpg', ''],
-    [[48.631811, 24.570473], 'Fotos/soborna_new.jpg', 'Fotos/soborna_old.jpg', ''],
     // [[48.630000, 24.570000], 'нове.jpg', 'старе.jpg', 'Підпис до фото'],
   ];
   // ====================================
