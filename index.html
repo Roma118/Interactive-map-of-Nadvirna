@@ -26,7 +26,6 @@
     height: 7px;
     transform: translateX(-50%);
     background: radial-gradient(ellipse at center, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 70%);
-    filter: blur(1px);
   }
   .pin-glass {
     position: absolute;
@@ -36,8 +35,6 @@
     height: 38px;
     clip-path: polygon(0 0, 100% 0, 50% 100%);
     background: rgba(255,255,255,0.10);
-    -webkit-backdrop-filter: blur(3px);
-    backdrop-filter: blur(3px);
   }
   .pin-outline {
     position: absolute;
@@ -105,8 +102,6 @@
     text-align: center;
   }
 
-  .rivers span { transform: rotate(-20deg); }
-
   #coords-box {
     position: absolute;
     left: 10px;
@@ -119,6 +114,10 @@
     font-size: 16px;
     user-select: all;
   }
+
+  /* Перемикачі шарів з квадратиками */
+  .leaflet-control-layers-overlays label { font-size: 16px; padding: 4px 0; }
+  .leaflet-control-layers-overlays input { width: 18px; height: 18px; vertical-align: middle; }
 </style>
 </head>
 <body>
@@ -269,12 +268,10 @@
     labels.addTo(customBase);
   }
 
-  // Спершу пробуємо швидкий локальний файл nadvirna-roads.json (лежить поруч з index.html).
-  // Якщо його немає — завантажуємо з Overpass, як і раніше.
+  // Спершу пам'ять браузера, потім файл nadvirna-roads.json, і лише в кінці Overpass.
   function loadFromFileOrOverpass() {
     statusBox.style.display = 'block';
     statusBox.textContent = 'Завантажую вулиці…';
-    // 1) пам'ять браузера (якщо вже відкривали карту раніше)
     try {
       var cached = localStorage.getItem('nadvirna-base-v1');
       if (cached) {
@@ -284,7 +281,6 @@
         return;
       }
     } catch (e) {}
-    // 2) локальний файл поруч з index.html, якщо він є; 3) інакше Overpass
     fetch('nadvirna-roads.json')
       .then(function (r) { if (!r.ok) throw new Error('no file'); return r.json(); })
       .then(function (data) {
@@ -317,11 +313,10 @@
       .catch(function () { loadCustomBase(serverIndex + 1); });
   }
 
-  // Світле тло: кольором самого контейнера карти, щоб воно не перекривало лінії
   var ownMap = customBase;
 
+  // Карти підкладки (одна з трьох)
   osm.addTo(map);
-  L.control.layers({ 'Карта': osm, 'Своя карта (без будівель)': ownMap, 'Супутник': satellite }, null, { collapsed: false }).addTo(map);
 
   map.on('baselayerchange', function (e) {
     if (e.layer === ownMap) {
@@ -355,6 +350,7 @@
   ];
   // ================================
 
+  var districtsLayer = L.layerGroup();
   districts.forEach(function (d) {
     L.marker(d[1], {
       icon: L.divIcon({
@@ -364,18 +360,17 @@
       }),
       interactive: false,
       pane: 'districtsPane'
-    }).addTo(map);
+    }).addTo(districtsLayer);
   });
 
   // ============ ФОТОГРАФІЇ ============
   // Щоб додати фото, скопіюй один рядок нижче і зміни його частини.
   // Формат рядка:
   // [[широта, довгота], 'сучасне фото.jpg', 'старе фото.jpg', 'Підпис'],
-  // Файли фото мають лежати в репозиторії поруч з index.html.
+  // Файли фото мають лежати в папці Fotos у репозиторії.
   // Якщо старого фото немає, залиш порожні лапки: ''. Підпису немає: ''.
   var photos = [
     [[48.634021863367984, 24.570932457481078], 'Fotos/sadok_nova.jpg', 'Fotos/sadok_stara.jpg', ''],
-    [[48.632705, 24.564469], 'Fotos/kostel_new.jpg', 'Fotos/kostel_old.jpg', ''],
     [[48.632705, 24.564469], 'Fotos/kostel_new.jpg', 'Fotos/kostel_old.jpg', ''],
     [[48.634935, 24.570011], 'Fotos/mickevycza_new.jpg', 'Fotos/mickevycza_old.jpg', ''],
     [[48.633494, 24.568058], 'Fotos/ploszcza_new.jpg', 'Fotos/ploszcza_old.jpg', ''],
@@ -387,6 +382,7 @@
   ];
   // ====================================
 
+  var photosLayer = L.layerGroup();
   photos.forEach(function (p) {
     var content = '<img src="' + p[1] + '" style="width:300px">';
     if (p[2]) content += '<br><img src="' + p[2] + '" style="width:300px">';
@@ -397,7 +393,7 @@
         html: '<img src="' + p[1] + '">',
         iconSize: [30, 30]
       })
-    }).addTo(map).bindPopup(content);
+    }).addTo(photosLayer).bindPopup(content);
   });
 
   var streets = [
@@ -485,6 +481,7 @@
       '</svg>' +
     '</div>';
 
+  var streetsLayer = L.layerGroup();
   streets.forEach(function (s) {
     var olds = s[2].length ? '<br>Раніше: ' + s[2].join('; ') : '';
     L.marker(s[1], {
@@ -496,10 +493,28 @@
         iconAnchor: [14, 39]
       })
     })
-      .addTo(map)
+      .addTo(streetsLayer)
       .bindTooltip(s[0], { direction: 'top', offset: [0, -36] })
       .bindPopup('<b>' + s[0] + '</b>' + olds, { offset: [0, -34] });
   });
+
+  // ============ ПЕРЕМИКАЧІ ============
+  // Підкладка: одна з трьох. Шари: квадратики з галочками, кожен можна зняти.
+  // Щоб додати новий пункт: створи шар (L.layerGroup) і додай його в overlays нижче.
+  var overlays = {
+    'Райони': districtsLayer,
+    'Вулиці': streetsLayer,
+    'Фото': photosLayer
+  };
+
+  L.control.layers(
+    { 'Карта': osm, 'Своя карта (без будівель)': ownMap, 'Супутник': satellite },
+    overlays,
+    { collapsed: false }
+  ).addTo(map);
+
+  // При відкритті ввімкнено лише райони
+  districtsLayer.addTo(map);
 </script>
 
 </body>
