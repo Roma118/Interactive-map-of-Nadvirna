@@ -83,10 +83,10 @@
   .district-label::before {
     content: "";
     position: absolute;
-    left: 50%;
-    top: 50%;
+    left: 0%;
+    top: 0%;
     width: 200px;
-    height: 100px;
+    height: 110px;
     transform: translate(-50%, -50%);
     background: #F0DC82;
     border-radius: 50%;
@@ -100,6 +100,8 @@
     color: #8B0000;
     text-shadow: 0 0 4px #F0DC82, 0 0 8px #F0DC82, 0 0 120px #F0DC82, 0 0 6px #F0DC82, 0 0 12px #F0DC82, 0 0 20px #F0DC82, 0 0 200px #F0DC82;
     text-align: center;
+    -webkit-text-stroke: 3px #ffffff;
+paint-order: stroke fill;
   }
 
   #coords-box {
@@ -355,8 +357,8 @@
     L.marker(d[1], {
       icon: L.divIcon({
         className: 'district-label',
-        html: '<span style="display:inline-block;transform:rotate(' + (d[2] || 0) + 'deg);white-space:nowrap;">' + d[0] + '</span>',
-        iconSize: [100, 30]
+        html: '<span style="display:inline-block;text-align:center;line-height:1.1;transform:translate(-50%,-50%) rotate(' + (d[2] || 0) + 'deg);white-space:nowrap;">' + d[0].split(' ').join('<br>') + '</span>',
+iconSize: [0, 0]
       }),
       interactive: false,
       pane: 'districtsPane'
