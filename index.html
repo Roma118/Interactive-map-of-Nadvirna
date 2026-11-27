@@ -117,12 +117,48 @@
   /* Перемикачі шарів з квадратиками */
   .leaflet-control-layers-overlays label { font-size: 16px; padding: 4px 0; }
   .leaflet-control-layers-overlays input { width: 18px; height: 18px; vertical-align: middle; }
+    /* Пошук вулиці */
+  #search-box {
+    position: absolute;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 260px;
+  }
+  #search-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    font-size: 16px;
+    border: 2px solid #333;
+    border-radius: 6px;
+  }
+  #search-results {
+    background: white;
+    border: 2px solid #333;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+  }
+  #search-results div {
+    padding: 8px 12px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  #search-results div:hover { background: #eee; }
 </style>
 </head>
 <body>
 
 <div id="map"></div>
 <div id="coords-box">Клікни на мапі, щоб побачити координати</div>
+  <div id="search-box">
+  <div id="search-results"></div>
+  <input id="search-input" type="text" placeholder="Введіть назву вулиці">
+</div>
 
 <script>
   var map = L.map('map', {
@@ -513,6 +549,36 @@ iconSize: [0, 0]
   ).addTo(map);
 
   // При відкритті ввімкнено лише райони
+    // Пошук вулиці
+  var searchInput = document.getElementById('search-input');
+  var searchResults = document.getElementById('search-results');
+  L.DomEvent.disableClickPropagation(document.getElementById('search-box'));
+
+  searchInput.addEventListener('input', function () {
+    var q = searchInput.value.trim().toLowerCase();
+    searchResults.innerHTML = '';
+    if (!q) { searchResults.style.display = 'none'; return; }
+    var found = streets.filter(function (s) {
+      return s[0].toLowerCase().indexOf(q) !== -1 ||
+        s[2].join(' ').toLowerCase().indexOf(q) !== -1;
+    }).slice(0, 8);
+    found.forEach(function (s) {
+      var row = document.createElement('div');
+      row.textContent = s[0];
+      row.addEventListener('click', function () {
+        searchResults.style.display = 'none';
+        searchInput.value = s[0];
+        if (!map.hasLayer(streetsLayer)) streetsLayer.addTo(map);
+        map.setView(s[1], 17);
+        streetsLayer.eachLayer(function (m) {
+          var ll = m.getLatLng();
+          if (ll.lat === s[1][0] && ll.lng === s[1][1]) m.openPopup();
+        });
+      });
+      searchResults.appendChild(row);
+    });
+    searchResults.style.display = found.length ? 'block' : 'none';
+  });
   districtsLayer.addTo(map);
 </script>
 
