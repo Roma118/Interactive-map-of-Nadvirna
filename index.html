@@ -493,7 +493,7 @@ iconSize: [0, 0]
   ];
   // ====================================
 
-   var photosLayer = L.layerGroup();
+    var photosLayer = L.layerGroup();
   photos.forEach(function (p) {
     var content;
     if (p[2]) {
@@ -533,23 +533,6 @@ iconSize: [0, 0]
     }
     range.addEventListener('input', move);
     move();
-  });
-
-  // Рух повзунка після відкриття вікна з фото
-  map.on('popupopen', function (e) {
-    var root = e.popup.getElement();
-    var box = root.querySelector('.compare');
-    if (!box) return;
-    var range = box.querySelector('.compare-range');
-    var oldWrap = box.querySelector('.old-wrap');
-    var handle = box.querySelector('.handle');
-    function move() {
-      oldWrap.style.width = range.value + '%';
-      handle.style.left = range.value + '%';
-    }
-    range.addEventListener('input', move);
-    move();
-  });
   });
 
   var streets = [
